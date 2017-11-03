@@ -40,7 +40,7 @@ public class FaceOverlayView extends View {
     public FaceOverlayView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
-    
+
     public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
         int width = bm.getWidth();
         int height = bm.getHeight();
@@ -63,16 +63,16 @@ public class FaceOverlayView extends View {
                 .setTrackingEnabled(true)
                 .setLandmarkType(FaceDetector.ALL_LANDMARKS)
                 .setMode(FaceDetector.ACCURATE_MODE)
+                .setProminentFaceOnly(true)
                 .build();
         if (!detector.isOperational()) {
             //Handle contingency
         } else {
-            long time1 = SystemClock.currentThreadTimeMillis();
-            Log.d("time1", SystemClock.currentThreadTimeMillis()+"");
-            //bitmap = getResizedBitmap(bitmap,bitmap.getWidth()/10,bitmap.getHeight()/10);
+
+            //Log.d("time1", SystemClock.currentThreadTimeMillis()+"");
             Frame frame = new Frame.Builder().setBitmap(bitmap).build();
             mFaces = detector.detect(frame);
-            Log.d("time2", (SystemClock.currentThreadTimeMillis() - time1)+"");
+
             detector.release();
         }
         logFaceData();
@@ -141,7 +141,6 @@ public class FaceOverlayView extends View {
                 int cy = (int) ( landmark.getPosition().y * scale );
                 canvas.drawCircle( cx, cy, 10, paint );
             }
-
         }
     }
 
@@ -153,16 +152,14 @@ public class FaceOverlayView extends View {
         float eulerZ;
         for( int i = 0; i < mFaces.size(); i++ ) {
             Face face = mFaces.valueAt(i);
-
             smilingProbability = face.getIsSmilingProbability();
             leftEyeOpenProbability = face.getIsLeftEyeOpenProbability();
             rightEyeOpenProbability = face.getIsRightEyeOpenProbability();
             eulerY = face.getEulerY();
             eulerZ = face.getEulerZ();
-
             Log.e( "Tuts+ Face Detection", "Smiling: " + smilingProbability );
-            Log.e( "Tuts+ Face Detection", "Left eye open: " + leftEyeOpenProbability );
-            Log.e( "Tuts+ Face Detection", "Right eye open: " + rightEyeOpenProbability );
+            Log.d( "Tuts+ Face Detection", "Left eye open: " + leftEyeOpenProbability );
+            Log.d( "Tuts+ Face Detection", "Right eye open: " + rightEyeOpenProbability );
             Log.e( "Tuts+ Face Detection", "Euler Y: " + eulerY );
             Log.e( "Tuts+ Face Detection", "Euler Z: " + eulerZ );
         }

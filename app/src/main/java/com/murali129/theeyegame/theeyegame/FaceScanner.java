@@ -317,7 +317,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
                 Log.e(TAG, "error stopping camera", e);
             }
         }
-
         isSurfaceValid = false;
     }
 
@@ -364,10 +363,16 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
         yuv.compressToJpeg(new Rect(0, 0, width, height), 50, out);
 
         byte[] bytes = out.toByteArray();
-        final Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        bitmap = Bitmap.createScaledBitmap(bitmap, 170, 100, false);
 
         Log.d("time", SystemClock.uptimeMillis()+"");
+
+        long time1 = SystemClock.currentThreadTimeMillis();
+
         CameraActivity.setBitMapImage(bitmap);
+
+        Log.d("time", (SystemClock.currentThreadTimeMillis() - time1)+"");
 
         if (camera != null) {
             camera.addCallbackBuffer(data);
