@@ -32,6 +32,8 @@ public class FaceOverlayView extends View {
     private double leftEyeOpenProbability = -1.0;
     private double rightEyeOpenProbability = -1.0;
 
+    private static int blinkCount = 0;
+
     private FaceDetector detector = new FaceDetector.Builder( getContext() )
             .setTrackingEnabled(false)
             .setLandmarkType(FaceDetector.ALL_LANDMARKS)
@@ -63,6 +65,8 @@ public class FaceOverlayView extends View {
 
         if(isEyeBlinked()){
             Log.d("isEyeBlinked","eye blink is observed");
+            blinkCount++;
+            CameraActivity.showScore(blinkCount);
         }
 
         invalidate();

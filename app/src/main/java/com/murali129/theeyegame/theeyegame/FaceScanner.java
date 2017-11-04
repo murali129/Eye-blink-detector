@@ -82,10 +82,8 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
     final int mPreviewWidth = 640;
     final int mPreviewHeight = 480;
 
-    private int mFrameOrientation = ORIENTATION_PORTRAIT;
 
     private boolean mFirstPreviewFrame = true;
-    private long captureStart;
     private long mAutoFocusStartedAt;
     private long mAutoFocusCompletedAt;
 
@@ -97,10 +95,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
 
     private boolean isSurfaceValid;
 
-    private int numManualRefocus;
-    private int numAutoRefocus;
-    private int numManualTorchChange;
-    private int numFramesSkipped;
 
     // ------------------------------------------------------------------------
     // STATIC INITIALIZATION
@@ -115,7 +109,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
      */
     FaceScanner(CameraActivity scanActivity, int currentFrameOrientation) {
         mScanActivityRef = new WeakReference<>(scanActivity);
-        mFrameOrientation = currentFrameOrientation;
     }
 
     /**
@@ -173,11 +166,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
         mAutoFocusStartedAt = 0;
         mAutoFocusCompletedAt = 0;
 
-        numManualRefocus = 0;
-        numAutoRefocus = 0;
-        numManualTorchChange = 0;
-
-        numFramesSkipped = 0;
 
         if (useCamera && mCamera == null) {
             mCamera = connectToCamera(CAMERA_CONNECT_RETRY_INTERVAL, CAMERA_CONNECT_TIMEOUT);
@@ -338,7 +326,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
         if (processingInProgress) {
             Log.e(TAG, "processing in progress.... dropping frame");
             // return frame buffer to pool
-            numFramesSkipped++;
             if (camera != null) {
                 camera.addCallbackBuffer(data);
             }
@@ -350,7 +337,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
         // TODO: eliminate this foolishness and measure/layout properly.
         if (mFirstPreviewFrame) {
             mFirstPreviewFrame = false;
-            mFrameOrientation = ORIENTATION_PORTRAIT;
         }
 
         Camera.Parameters parameters = camera.getParameters();
@@ -421,11 +407,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
             try {
                 mAutoFocusStartedAt = System.currentTimeMillis();
                 mCamera.autoFocus(this);
-                if (isManual) {
-                    numManualRefocus++;
-                } else {
-                    numAutoRefocus++;
-                }
             } catch (RuntimeException e) {
                 Log.w(TAG, "could not trigger auto focus: " + e);
             }
@@ -460,18 +441,12 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
                 params.setFlashMode(b ? Parameters.FLASH_MODE_TORCH : Parameters.FLASH_MODE_OFF);
                 mCamera.setParameters(params);
 
-                numManualTorchChange++;
-
                 return true;
             } catch (RuntimeException e) {
                 Log.w(TAG, "Could not set flash mode: " + e);
             }
         }
         return false;
-    }
-
-    void setDeviceOrientation(int orientation) {
-        mFrameOrientation = orientation;
     }
 
     boolean resumeScanning(SurfaceHolder holder) {
@@ -508,7 +483,6 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
 
         // Turn flash off
         setFlashOn(false);
-        captureStart = System.currentTimeMillis();
 
         return true;
     }

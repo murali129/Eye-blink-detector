@@ -7,6 +7,7 @@ import android.os.Bundle;
  * See the file "LICENSE.md" for the full license governing this code.
  */
 
+
 import android.Manifest;
 import android.app.ActionBar;
 import android.app.Activity;
@@ -15,13 +16,11 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.SensorManager;
 import android.os.Build;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -33,14 +32,12 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.ByteArrayInputStream;
 import java.lang.reflect.Constructor;
 
 
@@ -291,9 +288,10 @@ public final class CameraActivity extends Activity {
     private boolean mDetectOnly;
     private LinearLayout customOverlayLayout;
     private boolean waitingForPermission;
+    private static TextView textView;
 
     private RelativeLayout mUIBar;
-    private FrameLayout mMainLayout;
+    private RelativeLayout mMainLayout;
     private boolean useApplicationTheme;
 
     static private int numActivityAllocations;
@@ -318,6 +316,13 @@ public final class CameraActivity extends Activity {
     // ACTIVITY LIFECYCLE
     // ------------------------------------------------------------------------
 
+    static Activity thisActivity = null;
+    public static void showScore(int score)
+    {
+        textView.setText(score+"");
+        Toast.makeText(thisActivity, score+"" , Toast.LENGTH_SHORT).show();
+    }
+
     public static void setBitMapImage(Bitmap bitmap){
         //Log.d("time",SystemClock.uptimeMillis()+"");
         bitmap = RotateBitmap(bitmap,-90);
@@ -335,6 +340,7 @@ public final class CameraActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        thisActivity = this;
         numActivityAllocations++;
         // NOTE: java native asserts are disabled by default on Android.
         if (numActivityAllocations != 1) {
@@ -398,7 +404,6 @@ public final class CameraActivity extends Activity {
                 handleGeneralExceptionError(e);
             }
         }
-
     }
 
     private void android23AndAboveHandleCamera() {
@@ -422,7 +427,6 @@ public final class CameraActivity extends Activity {
         }
     }
 
-
     private void finishIfSuppressManualEntry() {
         if (suppressManualEntry) {
             Log.i(Util.PUBLIC_LOG_TAG, "Camera not available and manual entry suppressed.");
@@ -436,7 +440,6 @@ public final class CameraActivity extends Activity {
                 manualEntryFallbackOrForced = true;
             }
         } catch (CameraUnavailableException e) {
-
             Toast toast = Toast.makeText(this, "camera is unavailable", Toast.LENGTH_LONG);
             toast.setGravity(Gravity.CENTER, 0, TOAST_OFFSET_Y);
             toast.show();
@@ -532,8 +535,8 @@ public final class CameraActivity extends Activity {
             degrees = 270;
             mFrameOrientation = ORIENTATION_LANDSCAPE_RIGHT;
         }
+
         if (degrees >= 0 && degrees != mLastDegrees) {
-            mCardScanner.setDeviceOrientation(mFrameOrientation);
             if (degrees == 90) {
                 rotateCustomOverlay(270);
             } else if (degrees == 270) {
@@ -679,49 +682,6 @@ public final class CameraActivity extends Activity {
         }
     }
 
-    // ------------------------------------------------------------------------
-    // STATIC METHODS
-    // ------------------------------------------------------------------------
-
-    /**
-     * Determine if the device supports card scanning.
-     * <br><br>
-     * An ARM7 processor and Android SDK 8 or later are required. Additional checks for specific
-     * misbehaving devices may also be added.
-     *
-     * @return <code>true</code> if camera is supported. <code>false</code> otherwise.
-     */
-    public static boolean canReadCardWithCamera() {
-        try {
-            return Util.hardwareSupported();
-        } catch (CameraUnavailableException e) {
-            return false;
-        } catch (RuntimeException e) {
-            Log.w(TAG, "RuntimeException accessing Util.hardwareSupported()");
-            return false;
-        }
-    }
-
-    /**
-     * Utility method for decoding card bitmap
-     *
-     * @param intent - intent received in {@link Activity#onActivityResult(int, int, Intent)}
-     * @return decoded bitmap or null
-     */
-
-    public static Bitmap getCapturedCardImage(Intent intent) {
-        if (intent == null || !intent.hasExtra(EXTRA_CAPTURED_CARD_IMAGE)) {
-            return null;
-        }
-
-        byte[] imageData = intent.getByteArrayExtra(EXTRA_CAPTURED_CARD_IMAGE);
-        ByteArrayInputStream inStream = new ByteArrayInputStream(imageData);
-        Bitmap result = BitmapFactory.decodeStream(inStream, null, new BitmapFactory.Options());
-        return result;
-    }
-
-    // end static
-
     void onFirstFrame(int orientation) {
         SurfaceView sv = mPreview.getSurfaceView();
         if (mOverlay != null) {
@@ -735,14 +695,6 @@ public final class CameraActivity extends Activity {
 
     }
 
-    /**
-     * Show an error message using toast.
-     */
-    private void showErrorMessage(final String msgStr) {
-        Log.e(Util.PUBLIC_LOG_TAG, "error display: " + msgStr);
-        Toast toast = Toast.makeText(CameraActivity.this, msgStr, Toast.LENGTH_LONG);
-        toast.show();
-    }
 
     private boolean restartPreview() {
         assert mPreview != null;
@@ -775,7 +727,7 @@ public final class CameraActivity extends Activity {
      */
     private void setPreviewLayout() {
         // top level container
-        mMainLayout = new FrameLayout(this);
+        mMainLayout = new RelativeLayout(this);
         mMainLayout.setBackgroundColor(Color.BLACK);
         mMainLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
@@ -820,16 +772,10 @@ public final class CameraActivity extends Activity {
         previewParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         previewParams.addRule(RelativeLayout.ABOVE, UIBAR_ID);
         mMainLayout.addView(previewFrame, previewParams);
-
         modifiedImage = new FaceOverlayView(this);
-
-        // Now the layout parameters, these are a little tricky at first
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT);
-
-
         mMainLayout.addView(modifiedImage);
+        textView = new TextView(this);
+        mMainLayout.addView(textView);
 
         mUIBar = new RelativeLayout(this);
         mUIBar.setGravity(Gravity.BOTTOM);
