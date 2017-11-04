@@ -29,6 +29,15 @@ public class FaceOverlayView extends View {
     private Bitmap mBitmap;
     private SparseArray<Face> mFaces;
 
+    private double leftEyeOpenProbability = -1.0;
+    private double rightEyeOpenProbability = -1.0;
+
+    private FaceDetector detector = new FaceDetector.Builder( getContext() )
+            .setTrackingEnabled(false)
+            .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+            .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+            .build();
+
     public FaceOverlayView(Context context) {
         this(context, null);
     }
@@ -41,42 +50,53 @@ public class FaceOverlayView extends View {
         super(context, attrs, defStyleAttr);
     }
 
-    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // CREATE A MATRIX FOR THE MANIPULATION
-        Matrix matrix = new Matrix();
-        // RESIZE THE BIT MAP
-        matrix.postScale(scaleWidth, scaleHeight);
-        // "RECREATE" THE NEW BITMAP
-        Bitmap resizedBitmap = Bitmap.createBitmap(
-                bm, 0, 0, width, height, matrix, false);
-        bm.recycle();
-        return resizedBitmap;
-    }
-
     public void setBitmap( Bitmap bitmap ) {
         mBitmap = bitmap;
-        FaceDetector detector = new FaceDetector.Builder( getContext() )
-                .setTrackingEnabled(true)
-                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                .setMode(FaceDetector.ACCURATE_MODE)
-                .setProminentFaceOnly(true)
-                .build();
+
         if (!detector.isOperational()) {
             //Handle contingency
         } else {
-
             //Log.d("time1", SystemClock.currentThreadTimeMillis()+"");
             Frame frame = new Frame.Builder().setBitmap(bitmap).build();
             mFaces = detector.detect(frame);
-
-            detector.release();
         }
-        logFaceData();
+
+        if(isEyeBlinked()){
+            Log.d("isEyeBlinked","eye blink is observed");
+        }
+
         invalidate();
+    }
+
+    private boolean isEyeBlinked(){
+
+        if(mFaces.size()==0)
+            return false;
+
+        Face face = mFaces.valueAt(0);
+        float currentLeftEyeOpenProbability = face.getIsLeftEyeOpenProbability();
+        float currentRightEyeOpenProbability = face.getIsRightEyeOpenProbability();
+        if(currentLeftEyeOpenProbability== -1.0 || currentRightEyeOpenProbability == -1.0){
+            return false;
+        }
+
+        if(leftEyeOpenProbability>0.9 || rightEyeOpenProbability > 0.9){
+            boolean blinked = false;
+            if(currentLeftEyeOpenProbability<0.5||rightEyeOpenProbability<0.5){
+                blinked = true;
+            }
+
+            leftEyeOpenProbability = currentLeftEyeOpenProbability;
+            rightEyeOpenProbability = currentRightEyeOpenProbability;
+
+            return blinked;
+
+        }else{
+
+            leftEyeOpenProbability = currentLeftEyeOpenProbability;
+            rightEyeOpenProbability = currentRightEyeOpenProbability;
+            return false;
+        }
     }
 
     @Override

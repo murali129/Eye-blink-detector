@@ -364,7 +364,7 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
 
         byte[] bytes = out.toByteArray();
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        bitmap = Bitmap.createScaledBitmap(bitmap, 170, 100, false);
+        bitmap = Bitmap.createScaledBitmap(bitmap, 250, 180, false);
 
         Log.d("time", SystemClock.uptimeMillis()+"");
 
