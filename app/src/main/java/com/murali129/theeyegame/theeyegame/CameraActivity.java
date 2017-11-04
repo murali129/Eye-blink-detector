@@ -1,5 +1,6 @@
 package com.murali129.theeyegame.theeyegame;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 
 
@@ -320,7 +321,6 @@ public final class CameraActivity extends Activity {
     public static void showScore(int score)
     {
         textView.setText(score+"");
-        Toast.makeText(thisActivity, score+"" , Toast.LENGTH_SHORT).show();
     }
 
     public static void setBitMapImage(Bitmap bitmap){
@@ -767,15 +767,24 @@ public final class CameraActivity extends Activity {
         }
 
         previewFrame.addView(mOverlay);
+
         RelativeLayout.LayoutParams previewParams = new RelativeLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         previewParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         previewParams.addRule(RelativeLayout.ABOVE, UIBAR_ID);
         mMainLayout.addView(previewFrame, previewParams);
+
+        RelativeLayout rel = new RelativeLayout(this);
+
         modifiedImage = new FaceOverlayView(this);
-        mMainLayout.addView(modifiedImage);
         textView = new TextView(this);
-        mMainLayout.addView(textView);
+        textView.setText("0");
+        textView.setTextSize(60);
+        textView.setTypeface(Typeface.DEFAULT_BOLD);
+        textView.setTextColor(Color.WHITE);
+        rel.addView(modifiedImage);
+        rel.addView(textView);
+        mMainLayout.addView(rel);
 
         mUIBar = new RelativeLayout(this);
         mUIBar.setGravity(Gravity.BOTTOM);
