@@ -1,6 +1,8 @@
 package com.murali129.theeyegame.theeyegame;
 
+import android.content.Context;
 import android.graphics.Typeface;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 
 
@@ -50,6 +52,7 @@ import java.lang.reflect.Constructor;
  */
 
 public final class CameraActivity extends Activity {
+
     /**
      * Boolean extra. Optional. Defaults to <code>false</code>. If set, the card will not be scanned
      * with the camera.
@@ -321,6 +324,24 @@ public final class CameraActivity extends Activity {
     public static void showScore(int score)
     {
         textView.setText(score+"");
+    }
+
+    class MyGLSurfaceView extends GLSurfaceView {
+
+        private final GameGLRenderer mRenderer;
+
+        public MyGLSurfaceView(Context context) {
+            super(context);
+
+            // Create an OpenGL ES 2.0 context
+            setEGLContextClientVersion(2);
+
+            mRenderer = new GameGLRenderer();
+
+            super.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+            // Set the Renderer for drawing on the GLSurfaceView
+            setRenderer(mRenderer);
+        }
     }
 
     public static void setBitMapImage(Bitmap bitmap){
@@ -782,7 +803,7 @@ public final class CameraActivity extends Activity {
         textView.setTextSize(60);
         textView.setTypeface(Typeface.DEFAULT_BOLD);
         textView.setTextColor(Color.WHITE);
-        rel.addView(modifiedImage);
+        //rel.addView(modifiedImage);
         rel.addView(textView);
         mMainLayout.addView(rel);
 

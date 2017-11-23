@@ -86,7 +86,7 @@ public class FaceOverlayView extends View {
 
         if(leftEyeOpenProbability>0.9 || rightEyeOpenProbability > 0.9){
             boolean blinked = false;
-            if(currentLeftEyeOpenProbability<0.5||rightEyeOpenProbability<0.5){
+            if(currentLeftEyeOpenProbability<0.6 || rightEyeOpenProbability< 0.6){
                 blinked = true;
             }
 

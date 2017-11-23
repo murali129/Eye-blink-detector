@@ -327,7 +327,7 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
             Log.e(TAG, "processing in progress.... dropping frame");
             // return frame buffer to pool
             if (camera != null) {
-                camera.addCallbackBuffer(data);
+                //camera.addCallbackBuffer(data);
             }
             return;
         }
@@ -350,7 +350,7 @@ class FaceScanner implements Camera.PreviewCallback, Camera.AutoFocusCallback,
 
         byte[] bytes = out.toByteArray();
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        bitmap = Bitmap.createScaledBitmap(bitmap, 250, 180, false);
+        bitmap = Bitmap.createScaledBitmap(bitmap, 400, 300, false);
 
         Log.d("time", SystemClock.uptimeMillis()+"");
 
