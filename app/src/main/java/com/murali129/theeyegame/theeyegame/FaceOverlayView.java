@@ -31,7 +31,7 @@ public class FaceOverlayView extends View {
 
     private double leftEyeOpenProbability = -1.0;
     private double rightEyeOpenProbability = -1.0;
-
+    private double leftopenRatio = 1;
     private static int blinkCount = 0;
 
     private FaceDetector detector = new FaceDetector.Builder( getContext() )
@@ -89,18 +89,46 @@ public class FaceOverlayView extends View {
             if(currentLeftEyeOpenProbability<0.6 || rightEyeOpenProbability< 0.6){
                 blinked = true;
             }
-
             leftEyeOpenProbability = currentLeftEyeOpenProbability;
             rightEyeOpenProbability = currentRightEyeOpenProbability;
-
             return blinked;
-
         }else{
-
             leftEyeOpenProbability = currentLeftEyeOpenProbability;
             rightEyeOpenProbability = currentRightEyeOpenProbability;
             return false;
         }
+    }
+
+
+    private boolean isEyeToggled() {
+
+        if (mFaces.size() == 0)
+            return false;
+
+        Face face = mFaces.valueAt(0);
+        float currentLeftEyeOpenProbability = face.getIsLeftEyeOpenProbability();
+        float currentRightEyeOpenProbability = face.getIsRightEyeOpenProbability();
+        if (currentLeftEyeOpenProbability == -1.0 || currentRightEyeOpenProbability == -1.0) {
+            return false;
+        }
+
+        double currentLeftOpenRatio = currentLeftEyeOpenProbability / currentRightEyeOpenProbability;
+        if (currentLeftOpenRatio > 3) currentLeftOpenRatio = 3;
+        if (currentLeftOpenRatio < 0.33) currentLeftOpenRatio = 0.33;
+
+        Log.d("probs",currentLeftOpenRatio+" "+leftopenRatio );
+        if(currentLeftOpenRatio==0.33|| currentLeftOpenRatio ==3.0){
+            if(leftopenRatio==1){
+                leftopenRatio = currentLeftOpenRatio;
+            }
+
+            if(leftopenRatio*currentLeftOpenRatio==0.99){
+                leftopenRatio = currentLeftOpenRatio;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
